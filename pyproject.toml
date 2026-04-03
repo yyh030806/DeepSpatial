@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepspatial"
+version = "0.1.0"
+description = "Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+authors = [
+    { name = "Yuhang Yang", email = "yyh20030806@mail.ustc.edu.cn" }
+]
+keywords = ["spatial-transcriptomics", "generative-ai", "flow-matching", "3d-reconstruction", "bioinformatics"]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "pytorch-lightning>=2.1.0",
+    "scanpy>=1.10.0",
+    "anndata>=0.10.0",
+    "POT>=0.9.0",
+    "torchdiffeq",
+    "pyvista>=0.40.0",
+    "numpy<2.1.0",
+    "pandas>=2.0.0",
+    "scikit-learn",
+    "tqdm",
+    "einops",
+    "timm",
+    "matplotlib",
+    "plotly",
+    "ipywidgets",
+    "ipython",
+    "nbformat>=4.2.0",
+    "seaborn",
+]
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs-material",
+    "mkdocs-jupyter",
+    "mkdocstrings[python]",
+]
+
+[project.urls]
+"Homepage" = "https://yyh030806.github.io/DeepSpatial/"
+"Documentation" = "https://deepspatial.readthedocs.io/"
+"Repository" = "https://github.com/yyh030806/DeepSpatial"
+"Bug Tracker" = "https://github.com/yyh030806/DeepSpatial/issues"
