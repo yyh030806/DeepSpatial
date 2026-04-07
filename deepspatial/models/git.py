@@ -6,6 +6,18 @@ from timm.models.vision_transformer import Attention, Mlp
 from .commons import modulate, TimestepEmbedder, FinalLayer, get_1d_sincos_pos_embed
 
 class PatchEmbedder(nn.Module):
+    """
+    Embeds 1D vectors (e.g., gene expressions) into patch tokens via an MLP.
+
+    Parameters
+    ----------
+    input_size : int
+        The total number of features in the input 1D vector (e.g., `gene_dim`).
+    patch_size : int
+        The number of features to group into a single patch token.
+    hidden_size : int
+        The embedding dimension for the output patch tokens.
+    """
     def __init__(self, input_size, patch_size, hidden_size):
         super().__init__()
         self.patch_size = patch_size
@@ -31,7 +43,16 @@ class PatchEmbedder(nn.Module):
 
 class GiTBlock(nn.Module):
     """
-    Transformer block with adaptive layer norm zero (adaLN-Zero) conditioning.
+    Transformer block with adaptive layer normalization (adaLN-Zero) conditioning.
+
+    Parameters
+    ----------
+    hidden_size : int
+        The dimensionality of the input and output token embeddings.
+    num_heads : int
+        The number of attention heads in the multi-head self-attention mechanism.
+    mlp_ratio : float, optional
+        The expansion ratio for the hidden dimension inside the MLP, by default 4.0.
     """
     def __init__(self, hidden_size, num_heads, mlp_ratio=4.0):
         super().__init__()
@@ -56,7 +77,24 @@ class GiTBlock(nn.Module):
 
 class GiT(nn.Module):
     """
-    GiT: Separated x, g, c streams with physical depth and biological anchors.
+    GiT: Generative Transformer with separated streams for spatial transcriptomics.
+
+    Parameters
+    ----------
+    gene_dim : int
+        The number of genes (features) in the expression matrix.
+    patch_size : int
+        The size of the patches used to tokenize the gene expression vector.
+    hidden_size : int
+        The embedding dimension of the transformer backbone.
+    depth : int
+        The number of GiTBlocks (transformer layers).
+    num_heads : int
+        The number of attention heads in each block.
+    num_classes : int
+        The number of unique cell types for categorical conditioning.
+    mlp_ratio : float, optional
+        The expansion ratio for the MLP inside transformer blocks, by default 4.0.
     """
     def __init__(self, gene_dim, patch_size, hidden_size, depth, num_heads, num_classes, mlp_ratio=4.0):
         super().__init__()
@@ -120,7 +158,22 @@ class GiT(nn.Module):
 
     def forward(self, xt, gt, t, zt, delta_z, ct):
         """
-        Forward pass with separated modalities.
+        Forward pass computing the vector fields (velocity) for the given state.
+
+        Parameters
+        ----------
+        xt : torch.Tensor
+            Current spatial coordinates, shape `(Batch, 2)`.
+        gt : torch.Tensor
+            Current gene expression, shape `(Batch, Gene_Dim)`.
+        t : torch.Tensor
+            Current integration timestep, shape `(Batch, 1)`.
+        zt : torch.Tensor
+            Physical Z-depth coordinates, shape `(Batch, 1)`.
+        delta_z : torch.Tensor
+            The physical distance gap between the source and target slices, shape `(Batch, 1)`.
+        ct : torch.Tensor
+            One-hot encoded cell types, shape `(Batch, Num_Classes)`.
         """
         # Embed modalities separately
         gene_dim = gt.shape[1]

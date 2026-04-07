@@ -42,6 +42,7 @@ dependencies = [
     "ipython",
     "nbformat>=4.2.0",
     "seaborn",
+    "anywidget",
 ]
 
 [project.optional-dependencies]

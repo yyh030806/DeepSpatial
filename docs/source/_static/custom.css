@@ -1,0 +1,53 @@
+/* docs_sphinx/source/_static/custom.css */
+
+/* =========================================
+   1. 自定义颜色配置
+   ========================================= */
+
+/* 覆盖默认的超链接颜色为你的蓝绿色 */
+a {
+    color: #00AAB5 !important;
+}
+
+a:hover {
+    color: #317EC2 !important;
+}
+
+/* 覆盖各级标题颜色为你的深海蓝，同时强制长文本自动换行防止溢出 */
+h1, h2, h3, h4, h5, h6 {
+    color: #317EC2 !important;
+    
+    /* 新增：强制标题超长时自动换行 */
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+/* 调整侧边栏的活动链接颜色 */
+.bd-sidebar .current > a {
+    color: #317EC2 !important;
+    font-weight: 600;
+}
+
+
+/* 修改顶部工具栏所有图标的颜色 */
+.headerbtn i {
+    color: #00AAB5 !important;
+}
+
+.headerbtn:hover i {
+    color: #317EC2 !important;
+}
+
+
+/* =========================================
+   2. 布局修复与防溢出配置
+   ========================================= */
+
+/* 强制右侧 Contents (目录) 和侧边栏里的长代码文本自动换行 */
+.bd-toc-item code,
+.bd-toc code,
+nav.bd-docs-nav code,
+.bd-sidebar code {
+    white-space: normal !important; /* 取消不换行的默认限制 */
+    word-break: break-all !important; /* 允许在单词中间截断换行 */
+}

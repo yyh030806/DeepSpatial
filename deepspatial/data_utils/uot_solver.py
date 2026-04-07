@@ -6,6 +6,29 @@ import scipy.sparse as sp
 def compute_cost_matrix(x0, g0, c0, x1, g1, c1, alpha_spatial=0.5):
     """
     Computes a hybrid cost matrix balancing spatial distance, gene expression, and cell types.
+
+    Parameters
+    ----------
+    x0 : numpy.ndarray or torch.Tensor
+        Spatial coordinates for the source slice, shape `(N0, 2)`.
+    g0 : numpy.ndarray or torch.Tensor
+        Gene expression matrix for the source slice, shape `(N0, G)`.
+    c0 : numpy.ndarray or torch.Tensor
+        One-hot encoded cell types for the source slice, shape `(N0, C)`.
+    x1 : numpy.ndarray or torch.Tensor
+        Spatial coordinates for the target slice, shape `(N1, 2)`.
+    g1 : numpy.ndarray or torch.Tensor
+        Gene expression matrix for the target slice, shape `(N1, G)`.
+    c1 : numpy.ndarray or torch.Tensor
+        One-hot encoded cell types for the target slice, shape `(N1, C)`.
+    alpha_spatial : float, optional
+        Weight balancing the spatial vs. gene distance (between 0 and 1). 
+        By default 0.5.
+
+    Returns
+    -------
+    numpy.ndarray
+        The combined cost matrix of shape `(N0, N1)`.
     """
     eps = 1e-9
 
@@ -46,12 +69,34 @@ def compute_uot_coupling(x0, g0, c0, x1, g1, c1,
     """
     Computes the Unbalanced Optimal Transport (UOT) coupling matrix between two slices.
     
-    Args:
-        x0, g0, c0: Spatial, Gene, and One-hot labels for slice 0.
-        x1, g1, c1: Spatial, Gene, and One-hot labels for slice 1.
-        alpha_spatial: Weight for spatial vs gene distance.
-        uot_reg: Entropy regularization (higher = smoother, lower = sparser).
-        uot_tau: Marginal relaxation (KL divergence penalty weight).
+    Parameters
+    ----------
+    x0 : numpy.ndarray or torch.Tensor
+        Spatial coordinates for the source slice.
+    g0 : numpy.ndarray or torch.Tensor
+        Gene expression matrix for the source slice.
+    c0 : numpy.ndarray or torch.Tensor
+        One-hot encoded cell types for the source slice.
+    x1 : numpy.ndarray or torch.Tensor
+        Spatial coordinates for the target slice.
+    g1 : numpy.ndarray or torch.Tensor
+        Gene expression matrix for the target slice.
+    c1 : numpy.ndarray or torch.Tensor
+        One-hot encoded cell types for the target slice.
+    alpha_spatial : float, optional
+        Weight for spatial distance in the underlying cost matrix. By default 0.5.
+    uot_reg : float, optional
+        Entropy regularization parameter. Higher values lead to smoother, more dispersed 
+        couplings; lower values yield sparser, more deterministic matchings. By default 0.8.
+    uot_tau : float, optional
+        Marginal relaxation weight (KL divergence penalty). Controls how strictly the 
+        mass conservation is enforced. Smaller values allow more mass creation/destruction. 
+        By default 0.05.
+
+    Returns
+    -------
+    numpy.ndarray
+        The calculated optimal transport coupling matrix `pi` of shape `(N0, N1)`.
     """
     # Generate the cost matrix
     C = compute_cost_matrix(x0, g0, c0, x1, g1, c1, alpha_spatial)

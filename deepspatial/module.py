@@ -8,11 +8,21 @@ from .transport import create_transport, Sampler
 
 class DeepSpatialModule(pl.LightningModule):
     """
-    DeepSpatial Training & Inference Module.
-    Manages joint Probability Paths for Spatial (x), Gene (g), and Cell-Type (c) 
-    modalities using Flow Matching with EMA support.
+    DeepSpatial Module for Training & Inference.
+
+    Parameters
+    ----------
+    args : dict or argparse.Namespace
+        Configuration dictionary containing hyperparameters such as learning rate, 
+        path type, and sampling settings.
+    model : torch.nn.Module
+        The core neural network architecture (e.g., the GiT model) that predicts 
+        the velocity fields.
     """
     def __init__(self, args, model):
+        """
+        Initializes an LightningModule instance for DeepSpatial.
+        """
         super().__init__()
         self.save_hyperparameters(args)
         
@@ -125,8 +135,30 @@ class DeepSpatialModule(pl.LightningModule):
     @torch.no_grad()
     def sample(self, batch, mode="ODE", steps=20):
         """
-        Integrates the learned flow field to reconstruct intermediate states.
+        Integrates the learned flow field to reconstruct intermediate biological states.
+
+
+        Parameters
+        ----------
+        batch : dict
+            A dictionary containing the initial states (`x0`, `g0`, `c0`), the physical 
+            Z-depth conditions (`z0`, `z1`, `delta_z`), and other necessary tensors.
+        mode : str, optional
+            The integration mode, either `"ODE"` (Ordinary Differential Equation) or 
+            `"SDE"` (Stochastic Differential Equation). By default `"ODE"`.
+        steps : int, optional
+            The number of integration steps from the source to the target slice. 
+            Higher values yield more accurate but slower trajectories. By default 20.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the full integration trajectories:
+            - `'x_traj'` : torch.Tensor of shape `(Steps, Batch, 2)`
+            - `'g_traj'` : torch.Tensor of shape `(Steps, Batch, Gene_Dim)`
+            - `'c_traj_discrete'` : torch.Tensor of shape `(Steps, Batch)` containing discrete cell type labels.
         """
+
         self.ema_model.eval()
         
         # Configure the ODE/SDE sampler based on hyperparameters

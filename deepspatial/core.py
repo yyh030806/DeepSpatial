@@ -285,7 +285,7 @@ class DeepSpatial:
         if save_ckpt:
             self._save_config(save_dir)
             
-        callbacks = [LearningRateMonitor('step')]
+        callbacks = []
         if save_ckpt:
             callbacks.append(ModelCheckpoint(
                 dirpath=save_dir, 
