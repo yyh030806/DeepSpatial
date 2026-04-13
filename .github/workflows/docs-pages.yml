@@ -1,4 +1,4 @@
-name: Deploy Docs to GitHub Pages
+name: Deploy Homepage and Docs to GitHub Pages
 
 on:
   push:
@@ -42,13 +42,26 @@ jobs:
           cd docs
           make html
 
+      - name: Assemble Pages artifact
+        run: |
+          rm -rf site
+          mkdir -p site/docs
+
+          # Publish Sphinx docs under /docs
+          cp -R docs/build/html/. site/docs/
+
+          # Publish project homepage at site root if present
+          if [ -f index.html ]; then
+            cp index.html site/index.html
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build/html
+          path: site
 
   deploy:
     needs: build
