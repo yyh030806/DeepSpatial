@@ -18,6 +18,7 @@ By leveraging advanced representation learning and flow matching techniques, Dee
 ## Features
 
 * **Real 3D Reconstruction**: Synthesize missing biological landscapes between pre-aligned 2D slices to recover a high-fidelity, seamless 3D tissue volume.
+* **Multi-Omics Support**:
 * **Seamless Ecosystem Integration**: Built upon `AnnData` and fully compatible with the `Scanpy` ecosystem for streamlined downstream 3D analysis.
 * **GPU Accelerated**: High-performance PyTorch implementation optimized for efficient 3D manifold recovery of large-scale spatial datasets.
 
