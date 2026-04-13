@@ -50,7 +50,7 @@ html_theme_options = {
     # 右上角的 GitHub 仓库按钮配置
     "repository_url": "https://github.com/yyh030806/DeepSpatial",
     "use_repository_button": True,
-    "path_to_docs": "docs_sphinx/source",
+    "path_to_docs": "docs/source",
     
     # 顶部功能按钮
     "use_fullscreen_button": True,

@@ -398,7 +398,7 @@ class DeepSpatial:
             raise ValueError("adata_list must contain at least 2 slices.")
         
         # Initialize progress bar
-        pbar = tqdm(range(num_pairs), desc="3D Reconstruct", unit="gap")
+        pbar = tqdm(range(num_pairs), desc="DeepSpatial: 3D Reconstruct", unit="gap")
         
         for i in pbar:
             ad0, ad1 = adata_list[i], adata_list[i+1]
