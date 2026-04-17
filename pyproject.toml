@@ -56,3 +56,7 @@ docs = [
 "Documentation" = "https://deepspatial.readthedocs.io/"
 "Repository" = "https://github.com/yyh030806/DeepSpatial"
 "Bug Tracker" = "https://github.com/yyh030806/DeepSpatial/issues"
+
+[tool.setuptools.packages.find]
+include = ["deepspatial*"]
+exclude = ["docs*", "tests*", "index*"]
