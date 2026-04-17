@@ -52,9 +52,7 @@ jobs:
           cp -R docs/build/html/. site/docs/
 
           # Publish project homepage at site root if present
-          if [ -f index.html ]; then
-            cp index.html site/index.html
-          fi
+          cp index.html site/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -74,3 +72,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+[tool.setuptools]
+packages = ["deepspatial"]
