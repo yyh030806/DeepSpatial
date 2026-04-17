@@ -55,7 +55,7 @@ jobs:
           cp index.html site/index.html
 
           # Publsih assets
-          cp -R index site/assets
+          cp -R assets site/assets
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
