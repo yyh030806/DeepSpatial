@@ -54,6 +54,9 @@ jobs:
           # Publish project homepage at site root if present
           cp index.html site/index.html
 
+          # Publsih assets
+          cp -R index site/assets
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
