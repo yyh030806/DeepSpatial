@@ -5,6 +5,7 @@ on:
     branches: ["main", "master"]
     paths:
       - "docs/**"
+      - "index.html"
       - "deepspatial/**"
       - "pyproject.toml"
       - ".github/workflows/docs-pages.yml"
