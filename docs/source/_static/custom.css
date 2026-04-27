@@ -51,3 +51,19 @@ nav.bd-docs-nav code,
     white-space: normal !important; /* 取消不换行的默认限制 */
     word-break: break-all !important; /* 允许在单词中间截断换行 */
 }
+
+img.logo__image {
+    width: 150px !important;  /* 在这里修改为你想要的宽度（默认通常较小） */
+    height: auto !important;  /* 保持高度自动以防图片拉伸变形 */
+    max-width: 100% !important; /* 确保在小屏幕上不会超出边框 */
+}
+
+/* 强制移除 Sphinx 侧边栏 Logo 的默认背景框 */
+.logo__image,
+.bd-sidebar .navbar-brand {
+    background-color: transparent !important; /* 强制背景透明 */
+    padding: 0 !important;                    /* 强制去掉内边距 */
+    border: none !important;                  /* 强制去掉可能存在的边框 */
+    border-radius: 0 !important;              /* 强制去掉圆角 */
+    box-shadow: none !important;              /* 去掉阴影 */
+}

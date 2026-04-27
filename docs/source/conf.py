@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
-project = 'DeepSpatial'
+html_title = "DeepSpatial"
 copyright = '2026, Yuhang Yang'
 author = 'Yuhang Yang'
 
@@ -44,7 +44,7 @@ nb_execution_mode = "off"
 html_theme = 'sphinx_book_theme'
 
 # 浏览器标签页图标 (Favicon)
-html_favicon = '_static/favicon.png'
+html_favicon = '_static/logo.png'
 
 html_theme_options = {
     # 右上角的 GitHub 仓库按钮配置
@@ -61,12 +61,9 @@ html_theme_options = {
     "show_toc_level": 2,
     "logo": {
         "text": "",         # Logo 旁显示的文字
-        "image_light": "logo.png",     # 浅色模式 Logo
-        "image_dark": "logo.png",      # 深色模式 Logo
+        "image_light": "text_logo.png",     # 浅色模式 Logo
+        "image_dark": "text_logo.png",      # 深色模式 Logo
     },
-    
-    # 侧边栏底部信息
-    "extra_footer": "Developed by Yuhang Yang",
 }
 
 # 静态资源路径

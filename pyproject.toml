@@ -53,7 +53,7 @@ docs = [
 
 [project.urls]
 "Homepage" = "https://yyh030806.github.io/DeepSpatial/"
-"Documentation" = "https://deepspatial.readthedocs.io/"
+"Documentation" = "https://yyh030806.github.io/DeepSpatial/docs/"
 "Repository" = "https://github.com/yyh030806/DeepSpatial"
 "Bug Tracker" = "https://github.com/yyh030806/DeepSpatial/issues"
 

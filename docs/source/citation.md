@@ -2,11 +2,11 @@
 
 If you find DeepSpatial useful in your research, please consider citing our work.
 
-## Manuscript
+## Manuscript(TODO)
 
-DeepSpatial: Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution. (2026). 
+Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution. (2026). 
 
-## BibTeX
+## BibTeX(TODO)
 
 For LaTeX users, you can use the following entry:
 
