@@ -17,7 +17,7 @@ from .module import DeepSpatialModule
 
 class DeepSpatial:
     """
-    DeepSpatial: Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution.
+    DeepSpatial: Reconstructing True 3D Spatial Omics at Single-Cell Resolution.
     """
     def __init__(self):
         """

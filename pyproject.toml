@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "deepspatial"
 version = "0.1.0"
-description = "Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution"
+description = "Reconstructing True 3D Spatial Omics at Single-Cell Resolution"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -13,7 +13,7 @@ license-files = ["LICEN[CS]E*"]
 authors = [
     { name = "Yuhang Yang", email = "yyh20030806@mail.ustc.edu.cn" }
 ]
-keywords = ["spatial-transcriptomics", "generative-ai", "flow-matching", "3d-reconstruction", "bioinformatics"]
+keywords = ["spatial-omics", "generative-ai", "flow-matching", "3d-reconstruction", "bioinformatics"]
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",

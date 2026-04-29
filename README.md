@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/Pypi-0.1.0-317EC2.svg" alt="PyPI(TODO)"></a>
+  <a href="https://pypi.org/project/deepspatial/"><img src="https://img.shields.io/badge/Pypi-0.1.0-317EC2.svg" alt="PyPI"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/Paper-bioRxiv-00AAB5.svg" alt="BioRxiv(TODO)"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-f773a8.svg" alt="License"></a>
 </p>
@@ -79,7 +79,7 @@ If you use DeepSpatial in your research, please cite:
 ```bibtex
 @article{yang2026deepspatial,
   author = {Yuhang Yang},
-  title = {DeepSpatial: Reconstructing True 3D Spatial Transcriptomics at Single-Cell Resolution},
+  title = {Reconstructing True 3D Spatial Omics at Single-Cell Resolution},
   year = {2026},
   journal = {In preparation},
   url = {https://github.com/yyh030806/DeepSpatial}
