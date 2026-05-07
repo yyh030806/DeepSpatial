@@ -4,8 +4,10 @@
 
 <p align="center">
   <a href="https://pypi.org/project/deepspatial/"><img src="https://img.shields.io/badge/Pypi-0.1.0-317EC2.svg" alt="PyPI"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/Paper-bioRxiv-00AAB5.svg" alt="BioRxiv(TODO)"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-f773a8.svg" alt="License"></a>
+  <a href="https://yyh030806.github.io/DeepSpatial/"><img src="https://img.shields.io/badge/Homepage-deepspatial-f773a8.svg" alt="Homepage"></a>
+  <a href="https://yyh030806.github.io/DeepSpatial/docs/"><img src="https://img.shields.io/badge/Documentation-latest-4CAF50.svg" alt="Docs"></a>
+  <a href="https://doi.org/10.64898/2026.04.28.721395"><img src="https://img.shields.io/badge/Paper-bioRxiv-00AAB5.svg" alt="BioRxiv"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-FF9800.svg" alt="License"></a>
 </p>
 
 
@@ -72,17 +74,17 @@ adata_3d = model.reconstruct_full_volume(adatas, thickness=10.0)
 - Homepage: https://yyh030806.github.io/DeepSpatial/
 - Bug reports and feature requests: https://github.com/yyh030806/DeepSpatial/issues
 
-## Citation(TODO)
+## Citation
 
 If you use DeepSpatial in your research, please cite:
 
 ```bibtex
-@article{yang2026deepspatial,
-  author = {Yuhang Yang},
-  title = {Reconstructing True 3D Spatial Omics at Single-Cell Resolution},
-  year = {2026},
-  journal = {In preparation},
-  url = {https://github.com/yyh030806/DeepSpatial}
+@article {yang2026deepspatial,
+	author = {Yang, Yuhang and Luo, Yiming and Zhang, Kai and Bu, Yonggan and Xia, Zheng and Peng, Haoxin and Yan, Rui and Liu, Qi and Chen, Yang and Shen, Lin and Chen, Enhong},
+	title = {Reconstructing True 3D Spatial Omics at Single-Cell Resolution},
+	year = {2026},
+	doi = {10.64898/2026.04.28.721395},
+	journal = {bioRxiv}
 }
 ```
 
