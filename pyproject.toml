@@ -57,6 +57,12 @@ docs = [
 "Repository" = "https://github.com/yyh030806/DeepSpatial"
 "Bug Tracker" = "https://github.com/yyh030806/DeepSpatial/issues"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 include = ["deepspatial*"]
 exclude = ["docs*", "tests*", "index*"]
+
+[tool.setuptools.data-files]
+"deepspatial" = ["docs/source/_static/text_logo.png"]
