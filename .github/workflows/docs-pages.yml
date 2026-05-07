@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/**"
       - "index.html"
+      - "assets/**"
       - "deepspatial/**"
       - "pyproject.toml"
       - ".github/workflows/docs-pages.yml"
@@ -51,10 +52,10 @@ jobs:
           # Publish Sphinx docs under /docs
           cp -R docs/build/html/. site/docs/
 
-          # Publish project homepage at site root if present
+          # Publish project homepage at root
           cp index.html site/index.html
 
-          # Publsih assets
+          # Publish assets
           cp -R assets site/assets
 
       - name: Setup Pages
