@@ -44,6 +44,7 @@ class DeepSpatial:
         # Configuration dictionaries
         self.model_config = {}
         self.train_config = {}
+        self.data_config = {}
 
     def _normalize_spatial(self, adata_list: list[ad.AnnData]) -> None:
         """
@@ -95,8 +96,11 @@ class DeepSpatial:
                    num_workers: int = 4,
                    n_samples_base: int = 50000,
                    alpha_spatial: float = 0.5,
+                   cell_type_penalty: float = 50.0,
                    uot_reg: float = 0.8,
                    uot_tau: float = 0.05,
+                   uot_num_itermax: int = 50,
+                   uot_stop_thr: float = 1e-2,
                    mode: str = 'fit'):
         """
         Prepares the data pipeline and calculates physical normalization statistics.
@@ -108,15 +112,27 @@ class DeepSpatial:
             label_key: Key in `.obs` for cell type annotations.
             batch_size: Number of samples per training batch.
             num_workers: Multi-process data loading workers.
-            n_samples_base: Base number of cell pairs to sample per slice pair.
+            n_samples_base: Total trajectory-pair budget allocated across adjacent slice pairs.
             alpha_spatial: UOT spatial distance weight.
+            cell_type_penalty: UOT cost for pairing cells of different types.
             uot_reg: Entropy regularization for UOT.
             uot_tau: Marginal relaxation for UOT.
+            uot_num_itermax: Maximum number of Sinkhorn iterations.
+            uot_stop_thr: Sinkhorn convergence threshold.
             mode: Dataset mode ('fit' for training, 'predict' for inference).
         """
         self.spatial_key = spatial_key
         self.z_key = z_key
         self.label_key = label_key
+        self.data_config = {
+            'n_samples_base': n_samples_base,
+            'alpha_spatial': alpha_spatial,
+            'cell_type_penalty': cell_type_penalty,
+            'uot_reg': uot_reg,
+            'uot_tau': uot_tau,
+            'uot_num_itermax': uot_num_itermax,
+            'uot_stop_thr': uot_stop_thr,
+        }
         
         self._normalize_spatial(adata_list)
         
@@ -127,8 +143,11 @@ class DeepSpatial:
             label_key=label_key,
             n_samples_base=n_samples_base,
             alpha_spatial=alpha_spatial,
+            cell_type_penalty=cell_type_penalty,
             uot_reg=uot_reg,
             uot_tau=uot_tau,
+            uot_num_itermax=uot_num_itermax,
+            uot_stop_thr=uot_stop_thr,
             mode=mode
         )
 
@@ -161,7 +180,7 @@ class DeepSpatial:
         Instantiates the GiT network architecture and Flow Matching logic.
         
         Args:
-            patch_size: Tokenization patch size for spatial coordinates.
+            patch_size: Number of gene-expression features per gene token.
             hidden_size: Transformer embedding dimension.
             depth: Number of transformer layers.
             num_heads: Number of attention heads.
@@ -169,8 +188,8 @@ class DeepSpatial:
             path_type: Probability path type for Flow Matching.
             lr: Learning rate for training.
             weight_decay: L2 regularization weight.
-            lambda_g: Loss weight for gene expression reconstruction.
-            lambda_c: Loss weight for cell type classification.
+            lambda_g: Loss weight for gene-expression velocity matching.
+            lambda_c: Loss weight for continuous cell-type velocity matching.
             sampling_method: ODE solver for inference (e.g., 'dopri5', 'euler').
             atol: Absolute tolerance for ODE solver.
             rtol: Relative tolerance for ODE solver.
@@ -220,6 +239,7 @@ class DeepSpatial:
             'spatial_key': self.spatial_key,
             'z_key': self.z_key,
             'label_key': self.label_key,
+            'data_config': self.data_config,
             'model_config': self.model_config,
             'train_config': self.train_config
         }
@@ -250,6 +270,7 @@ class DeepSpatial:
             self.spatial_key = config.get('spatial_key', 'spatial')
             self.z_key = config.get('z_key', 'z_coord')
             self.label_key = config['label_key']
+            self.data_config = config.get('data_config', {})
             self.categories = pd.Index(config['categories'])
             self.model_config = config.get('model_config', {})
             self.train_config = config.get('train_config', {})
@@ -335,7 +356,7 @@ class DeepSpatial:
             adata0: Source slice AnnData (must contain 'spatial_norm' and 'z_norm').
             adata1: Target slice AnnData (must contain 'spatial_norm' and 'z_norm').
             steps: Number of integration steps for the ODE solver.
-            thickness: Physical distance (um) between generated cells, controlling density.
+            thickness: Target physical spacing (um) used to determine the number of virtual cells.
             chunk_size: Batch size for ODE integration to manage VRAM usage.
             device: Computing device ('auto', 'cuda', 'cpu', or specific 'cuda:n').
 
@@ -359,8 +380,8 @@ class DeepSpatial:
             adata0, adata1, thickness, dev
         )
 
-        # Execute chunked ODE integration
-        mix_data = self._generate_and_prune_optimized(
+        # Generate virtual cells with chunked ODE integration
+        mix_data = self._generate_virtual_cells(
             x0, g0, c0, x1, g1, c1, z0, z1, steps, 
             target_cells, total_cells, dev, chunk_size
         )
@@ -457,8 +478,8 @@ class DeepSpatial:
         
         return x0, z0, g0, c0, x1, z1, g1, c1, target_cells, total_cells
 
-    def _generate_and_prune_optimized(self, x0, g0, c0, x1, g1, c1, z0, z1, steps, target_cells, total_cells, dev, chunk_size):
-        """Memory-efficient ODE integration and spatial density pruning."""
+    def _generate_virtual_cells(self, x0, g0, c0, x1, g1, c1, z0, z1, steps, target_cells, total_cells, dev, chunk_size):
+        """Generate virtual cells using density-aware bidirectional ODE sampling."""
         N0, N1 = float(x0.shape[0]), float(x1.shape[0])
         u = torch.rand(total_cells, device=dev)
         
@@ -479,7 +500,7 @@ class DeepSpatial:
         final_g = torch.zeros((total_cells, g0.shape[1]), device=dev)
         final_c = torch.zeros(total_cells, device=dev, dtype=torch.long)
 
-        def process_direction(is_forward, src_indices, child_ids, x_ref, g_ref, c_ref, z_start, z_end):
+        def process_direction(is_forward, src_indices, child_ids, x_ref, g_ref, c_ref, z0_condition, z1_condition):
             if len(child_ids) == 0: return
             unique_parents, inverse_indices = torch.unique(src_indices, return_inverse=True)
             c_onehot_ref = torch.nn.functional.one_hot(c_ref, num_classes=self.num_classes).float()
@@ -494,18 +515,19 @@ class DeepSpatial:
                 local_parent_idx = inverse_indices[mask_in_chunk] - i
                 batch = {
                     'x0': x_ref[chunk_parents], 'g0': g_ref[chunk_parents], 'c0': c_onehot_ref[chunk_parents],
-                    'z0': torch.full((len(chunk_parents), 1), z_start, device=dev),
-                    'z1': torch.full((len(chunk_parents), 1), z_end, device=dev),
-                    'delta_z': torch.full((len(chunk_parents), 1), z_end - z_start, device=dev)
+                    'z0': torch.full((len(chunk_parents), 1), z0_condition, device=dev),
+                    'z1': torch.full((len(chunk_parents), 1), z1_condition, device=dev),
+                    'delta_z': torch.full((len(chunk_parents), 1), z1_condition - z0_condition, device=dev)
                 }
-                res = self.module.sample(batch, mode="ODE", steps=steps)
-                
-                if not is_forward:
-                    res['x_traj'] = torch.flip(res['x_traj'], dims=[0])
-                    res['g_traj'] = torch.flip(res['g_traj'], dims=[0])
-                    res['c_traj_discrete'] = torch.flip(res['c_traj_discrete'], dims=[0])
+                res = self.module.sample(
+                    batch,
+                    mode="ODE",
+                    steps=steps,
+                    reverse_time=not is_forward,
+                )
 
-                chunk_t_vals = t_vals[chunk_child_ids] * (steps - 1)
+                trajectory_pos = t_vals[chunk_child_ids] if is_forward else 1.0 - t_vals[chunk_child_ids]
+                chunk_t_vals = trajectory_pos * (steps - 1)
                 idx_low = chunk_t_vals.long()
                 idx_high = torch.clamp(idx_low + 1, max=steps - 1)
                 w_high = (chunk_t_vals - idx_low.float()).unsqueeze(1)
@@ -518,7 +540,7 @@ class DeepSpatial:
                 torch.cuda.empty_cache()
 
         process_direction(True, src_fwd, fwd_ids, x0, g0, c0, z0, z1)
-        process_direction(False, src_bwd, bwd_ids, x1, g1, c1, z1, z0)
+        process_direction(False, src_bwd, bwd_ids, x1, g1, c1, z0, z1)
 
         
         fwd_src_keep, bwd_src_keep = src_fwd, src_bwd

@@ -77,7 +77,7 @@ class GiTBlock(nn.Module):
 
 class GiT(nn.Module):
     """
-    GiT: Generative Transformer with separated streams for spatial transcriptomics.
+    GiT: Generative Transformer for joint spatial, expression, and cell-type velocities.
 
     Parameters
     ----------
@@ -92,7 +92,7 @@ class GiT(nn.Module):
     num_heads : int
         The number of attention heads in each block.
     num_classes : int
-        The number of unique cell types for categorical conditioning.
+        The dimension of the continuously relaxed one-hot cell-type state.
     mlp_ratio : float, optional
         The expansion ratio for the MLP inside transformer blocks, by default 4.0.
     """
@@ -124,7 +124,7 @@ class GiT(nn.Module):
         # 3. Output Heads
         self.x_head = FinalLayer(hidden_size, 2, 1) # Spatial velocity
         self.g_head = FinalLayer(hidden_size, patch_size, 1) # Gene velocity
-        self.c_head = nn.Linear(hidden_size, num_classes) # Cell type logits
+        self.c_head = nn.Linear(hidden_size, num_classes) # Cell-type velocity
 
         self.initialize_weights()
 
@@ -173,7 +173,7 @@ class GiT(nn.Module):
         delta_z : torch.Tensor
             The physical distance gap between the source and target slices, shape `(Batch, 1)`.
         ct : torch.Tensor
-            One-hot encoded cell types, shape `(Batch, Num_Classes)`.
+            Continuously relaxed one-hot cell-type states, shape `(Batch, Num_Classes)`.
         """
         # Embed modalities separately
         gene_dim = gt.shape[1]

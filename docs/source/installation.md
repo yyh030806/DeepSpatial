@@ -4,7 +4,7 @@ This page provides a complete installation guide for DeepSpatial, including envi
 
 ## System Requirements
 
-- Python: 3.9 to 3.11 recommended
+- Python: 3.10 to 3.11 recommended
 - OS: Linux, macOS, or Windows (WSL recommended for GPU workflows on Windows)
 - GPU (optional but recommended): NVIDIA GPU with CUDA support for faster training
 

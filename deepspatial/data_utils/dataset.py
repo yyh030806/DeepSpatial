@@ -21,8 +21,11 @@ class DeepSpatialDataset(Dataset):
                  label_key: str = 'cell_class',
                  n_samples_base: int = 50000, 
                  alpha_spatial: float = 0.5,
+                 cell_type_penalty: float = 50.0,
                  uot_reg: float = 0.8, 
                  uot_tau: float = 0.05,
+                 uot_num_itermax: int = 50,
+                 uot_stop_thr: float = 1e-2,
                  mode: str = 'fit'):
         """
         Args:
@@ -32,8 +35,11 @@ class DeepSpatialDataset(Dataset):
             label_key: Key in .obs for cell labels/types.
             n_samples_base: Target total number of trajectory pairs.
             alpha_spatial: Balance between spatial and gene distances for UOT.
+            cell_type_penalty: UOT cost for pairing different cell types.
             uot_reg: Entropy regularization for UOT solver.
             uot_tau: Marginal relaxation for UOT solver.
+            uot_num_itermax: Maximum Sinkhorn iterations.
+            uot_stop_thr: Sinkhorn stopping threshold.
             mode: 'fit' for full multi-slice training, 'predict' for limited slice pairs.
         """
         self.adata_list = adata_list
@@ -42,8 +48,11 @@ class DeepSpatialDataset(Dataset):
         self.label_key = label_key
         self.n_samples_base = n_samples_base
         self.alpha_spatial = alpha_spatial
+        self.cell_type_penalty = cell_type_penalty
         self.uot_reg = uot_reg
         self.uot_tau = uot_tau
+        self.uot_num_itermax = uot_num_itermax
+        self.uot_stop_thr = uot_stop_thr
 
         # --- 1. Global Label Encoding ---
         self.label_encoder = LabelEncoder()
@@ -112,8 +121,11 @@ class DeepSpatialDataset(Dataset):
             pi = compute_uot_coupling(
                 x0, g0, c0, x1, g1, c1, 
                 alpha_spatial=self.alpha_spatial,
+                cell_type_penalty=self.cell_type_penalty,
                 uot_reg=self.uot_reg,
-                uot_tau=self.uot_tau
+                uot_tau=self.uot_tau,
+                num_itermax=self.uot_num_itermax,
+                stop_thr=self.uot_stop_thr,
             )
             
             # Sampling logic

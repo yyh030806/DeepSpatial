@@ -6,7 +6,7 @@ The Data Utilities module provides the foundational data structures and mathemat
 
 ## PyTorch Dataset
 
-The core dataset class. It automatically computes cross-slice pairings and formats spatial coordinates, sparse gene expression matrices, and cell-type annotations into optimized PyTorch tensors for Flow Matching.
+The core dataset class. It computes adjacent-slice UOT pairings and formats spatial coordinates, gene expression, and one-hot cell-type annotations as PyTorch tensors. `n_samples_base` is a total trajectory-pair budget distributed across slice pairs in proportion to the product of their cell counts.
 
 ```{eval-rst}
 .. currentmodule:: deepspatial.data_utils
@@ -20,7 +20,17 @@ The core dataset class. It automatically computes cross-slice pairings and forma
 ```
 
 ## Optimal Transport Solvers
-The mathematical engine for aligning disjointed spatial slices. It calculates a hybrid cost matrix that heavily penalizes class mismatches while balancing spatial Euclidean distances and gene expression cosine similarities, ultimately solving the entropy-regularized Unbalanced Sinkhorn distance.
+The mathematical engine for aligning disjointed spatial slices. The cost is
+
+$$
+C=\alpha d_{\mathrm{spatial}}+(1-\alpha)d_{\mathrm{gene}}
+  +\lambda_{\mathrm{type}}d_{\mathrm{type}},
+$$
+
+where the spatial and gene distance matrices are independently max-normalized.
+The solver uses uniform endpoint marginals and entropy-regularized unbalanced
+Sinkhorn transport. `cell_type_penalty`, `uot_reg`, `uot_tau`, `num_itermax`,
+and `stop_thr` are explicit API parameters rather than hidden constants.
 
 ```{eval-rst}
 .. currentmodule:: deepspatial.data_utils

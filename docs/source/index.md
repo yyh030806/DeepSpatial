@@ -10,7 +10,10 @@
 **DeepSpatial** is a deep learning framework designed to reconstruct continuous 3D tissue models from disjointed 2D spatial transcriptomics slices.
 ![alt text](_static/overview.png)
 
-By leveraging advanced representation learning and flow matching techniques, DeepSpatial maps discrete spatial omics data into a unified, high-fidelity 3D coordinate space, enabling seamless downstream analysis across tissue sections.
+DeepSpatial uses UOT-coupled endpoint cells and continuous flow matching over spatial coordinates, gene expression, and relaxed one-hot cell-type states to reconstruct a unified 3D coordinate space.
+
+See the [implementation-aligned method](method.md) for the exact training and
+generation equations and the reported benchmark configuration.
 ![alt text](_static/downstream.png)
 
 ---
@@ -21,12 +24,14 @@ By leveraging advanced representation learning and flow matching techniques, Dee
 * **Multi-Omics Support**: Broad support for spatial transcriptomics and proteomics, allowing for comprehensive multi-modal characterization of tissue architecture in 3D.
 * **Seamless Ecosystem Integration**: Built upon `AnnData` and fully compatible with the `Scanpy` ecosystem for streamlined downstream 3D analysis.
 * **GPU Accelerated**: High-performance PyTorch implementation optimized for efficient 3D manifold recovery of large-scale spatial datasets.
+* **Explicit Bidirectional Generation**: Forward and reverse-time ODE trajectories are sampled with depth-dependent direction probabilities.
+* **Density-aware Sampling**: Virtual depths reflect the cell-count gradient between adjacent observed slices.
 
 ---
 
 ## Quickstart
 
-Fisrt install the DeepSpatial package via `pip`:
+First install the DeepSpatial package via `pip`:
 
 ```bash
 pip install deepspatial
@@ -39,7 +44,8 @@ import scanpy as sc
 import deepspatial as ds
 
 # Load a sequence of pre-aligned 2D AnnData slices 
-# Each slice contains discrete spatial coordinates and gene expression
+# Each slice contains XY coordinates, gene expression, one physical Z value,
+# and cell-type annotations in obs['cell_class']
 adatas = [sc.read_h5ad(f"slice_{i}.h5ad") for i in range(5)]
 
 # Initialize the DeepSpatial orchestrator
@@ -47,13 +53,21 @@ model = ds.DeepSpatial()
 
 # Prepare multi-modal data structures for 3D modeling
 # Sets up joint probability paths for spatial and molecular dimensions
-model.setup_data(adatas)
+model.setup_data(
+    adatas,
+    n_samples_base=sum(adata.n_obs for adata in adatas),
+    cell_type_penalty=50.0,
+    uot_reg=0.1,
+    uot_tau=1.0,
+    uot_num_itermax=50,
+    uot_stop_thr=1e-2,
+)
 
 # Construct the generative Flow Matching architecture
 model.build_model()
 
 # Execute the training pipeline to learn the continuous 3D manifold
-model.fit()
+model.fit(max_epochs=10)
 
 # Synthesize the seamless 3D biological volume
 # Reconstructs missing molecular landscapes between original 2D planes
@@ -67,6 +81,7 @@ adata_3d = model.reconstruct_full_volume(adatas, thickness=10)
 :titlesonly: true
 
 installation
+method
 tutorials/index
 api/index
 citation

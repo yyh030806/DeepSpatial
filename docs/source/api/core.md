@@ -24,7 +24,7 @@ The following methods define the standard workflow for 3D volume reconstruction 
 
 ### Data Preparation
 
-Prior to modeling, the data pipeline must be initialized. This process automatically extracts the physical coordinate boundaries from the 2D slices and computes the normalization statistics necessary for accurate physical dimension scaling.
+Prior to modeling, the data pipeline must be initialized. This process extracts the physical coordinate boundaries, writes normalized internal coordinate keys, constructs adjacent-slice UOT pairs, and records the UOT configuration in `data_config`. The standard pipeline expects cell-type annotations because they are used in UOT, flow matching, and output decoding.
 
 ```{eval-rst}
 .. autosummary::
@@ -36,7 +36,7 @@ Prior to modeling, the data pipeline must be initialized. This process automatic
 
 ### Model & Training
 
-Configures the core Transformer-based architecture and Flow Matching dynamics, while managing the training lifecycle and model checkpoints.
+Configures the GiT architecture and joint continuous Flow Matching dynamics. Spatial coordinates, gene expression, and relaxed one-hot cell-type states use velocity-matching losses; cell type is not trained with cross-entropy. Saved metadata includes data, model, and training configurations.
 
 ```{eval-rst}
 .. autosummary::
@@ -50,7 +50,7 @@ Configures the core Transformer-based architecture and Flow Matching dynamics, w
 
 ### 3D Reconstruction
 
-The core generation and inference API. By leveraging the trained continuous vector field, these methods synthesize single-cell resolution gene expression profiles and spatial coordinates within the unobserved physical space between adjacent slices.
+The core generation and inference API. It uses density-aware target depths and depth-dependent parent directions. Forward samples follow the learned ODE from physical time 0, while backward samples use explicit reverse-time integration from physical time 1 without swapping depth endpoints or flipping a forward trajectory. Generated expression is sparsified to the parent cell's non-zero gene count. There is no oversampling or spatial subset pruning.
 
 ```{eval-rst}
 .. autosummary::
@@ -60,3 +60,6 @@ The core generation and inference API. By leveraging the trained continuous vect
    DeepSpatial.reconstruct_full_volume
    DeepSpatial.reconstruct_between_slices
 ```
+
+The internal generation helper is named `_generate_virtual_cells`, reflecting
+its actual role; it does not implement a pruning optimization.

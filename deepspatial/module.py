@@ -84,12 +84,11 @@ class DeepSpatialModule(pl.LightningModule):
             xt=xt, gt=gt, t=t, zt=zt, delta_z=delta_z, ct=ct
         )
 
-        # Compute losses (Mean Squared Error on velocity)
-        # Spatial loss (X, Y)
+        # ``loss_fn`` already averages the squared velocity error over each
+        # modality's feature dimensions.  Averaging the resulting per-sample
+        # losses therefore gives one, and only one, dimensional normalization.
         loss_x = self.transport.loss_fn(vx_pred, x0, xt, t, ux_t).mean()
-        # Gene loss
         loss_g = self.transport.loss_fn(vg_pred, g0, gt, t, ug_t).mean()
-        # Cell type loss (on one-hot/continuous space)
         loss_c = self.transport.loss_fn(vc_pred, c0, ct, t, uc_t).mean()
 
         # Weighted total loss
@@ -133,7 +132,7 @@ class DeepSpatialModule(pl.LightningModule):
     # Inference / Sampling Logic
     # ============================================================
     @torch.no_grad()
-    def sample(self, batch, mode="ODE", steps=20):
+    def sample(self, batch, mode="ODE", steps=20, reverse_time=False):
         """
         Integrates the learned flow field to reconstruct intermediate biological states.
 
@@ -149,15 +148,26 @@ class DeepSpatialModule(pl.LightningModule):
         steps : int, optional
             The number of integration steps from the source to the target slice. 
             Higher values yield more accurate but slower trajectories. By default 20.
+        reverse_time : bool, optional
+            If ``True``, start from the terminal state at physical flow time
+            ``t=1`` and integrate the equivalent reparameterized ODE
+            ``dq/du = -v(q, 1-u)`` for solver time ``u`` increasing from 0 to 1.
+            The depth endpoints and ``delta_z`` must remain in their original
+            forward order. By default ``False``.
 
         Returns
         -------
         dict
             A dictionary containing the full integration trajectories:
+
             - `'x_traj'` : torch.Tensor of shape `(Steps, Batch, 2)`
             - `'g_traj'` : torch.Tensor of shape `(Steps, Batch, Gene_Dim)`
-            - `'c_traj_discrete'` : torch.Tensor of shape `(Steps, Batch)` containing discrete cell type labels.
+            - `'c_traj_discrete'` : torch.Tensor of shape `(Steps, Batch)` obtained by
+              applying argmax to the integrated continuous cell-type state.
         """
+
+        if reverse_time and mode != "ODE":
+            raise ValueError("reverse_time=True is only supported for ODE sampling.")
 
         self.ema_model.eval()
         
@@ -172,7 +182,8 @@ class DeepSpatialModule(pl.LightningModule):
         # Instantiate the integration function
         sampler_fn = self.sampler.sample_ode(**sample_config) if mode == "ODE" else self.sampler.sample_sde(**sample_config)
 
-        # Initial state at t=0
+        # Initial state is at physical t=0 for forward sampling and at physical
+        # t=1 for reverse-time sampling.
         x0, g0, c0 = batch['x0'], batch['g0'], batch['c0']
         x_dim, g_dim = x0.shape[-1], g0.shape[-1]
         z0, z1, delta_z = batch['z0'], batch['z1'], batch['delta_z']
@@ -180,28 +191,34 @@ class DeepSpatialModule(pl.LightningModule):
         # Concatenate for joint integration
         init_state = torch.cat([x0, g0, c0], dim=-1)
 
-        def velocity_field_wrapper(joint_state_t, t):
+        def velocity_field_wrapper(joint_state_t, solver_t):
             # Unpack modalities
             xt = joint_state_t[..., :x_dim]
             gt = joint_state_t[..., x_dim : x_dim + g_dim]
             ct = joint_state_t[..., x_dim + g_dim :]
             
-            # Ensure t is a tensor on the correct device
-            if torch.is_tensor(t):
-                t_val = t.item() if t.dim() == 0 else t[0].item()
+            # The numerical solver always advances from u=0 to u=1. For
+            # reverse-time sampling, physical flow time is t=1-u.
+            if torch.is_tensor(solver_t):
+                solver_t_val = solver_t.item() if solver_t.dim() == 0 else solver_t[0].item()
             else:
-                t_val = t
+                solver_t_val = solver_t
 
-            t_tensor = torch.full((xt.shape[0],), t_val, device=xt.device, dtype=xt.dtype)
+            model_t_val = 1.0 - solver_t_val if reverse_time else solver_t_val
 
-            # Interpolate normalized Z coordinate
-            _, zt, _ = self.transport.path_sampler.plan(t_tensor, z0, z1)
+            model_t = torch.full((xt.shape[0],), model_t_val, device=xt.device, dtype=xt.dtype)
+
+            # z0, z1, and delta_z retain their original forward orientation.
+            _, zt, _ = self.transport.path_sampler.plan(model_t, z0, z1)
 
             # Forward pass through EMA model
             vx, vg, vc = self.ema_model(
-                xt=xt, gt=gt, t=t_tensor, zt=zt, delta_z=delta_z, ct=ct
+                xt=xt, gt=gt, t=model_t, zt=zt, delta_z=delta_z, ct=ct
             )
-            return torch.cat([vx, vg, vc], dim=-1)
+            velocity = torch.cat([vx, vg, vc], dim=-1)
+
+            # q(u)=s(1-u), hence dq/du=-v(q, 1-u).
+            return -velocity if reverse_time else velocity
 
         # Compute trajectory: Shape [steps, batch, dim]
         trajectory = sampler_fn(init_state, velocity_field_wrapper)
