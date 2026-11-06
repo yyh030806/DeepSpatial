@@ -1,6 +1,6 @@
 # Documentation
 
-[![PyPI](https://img.shields.io/badge/Pypi-1.0.0-317EC2.svg)](https://pypi.org/project/deepspatial/)
+[![PyPI](https://img.shields.io/badge/Pypi-1.0.1-317EC2.svg)](https://pypi.org/project/deepspatial/)
 [![BioRxiv](https://img.shields.io/badge/Paper-bioRxiv-00AAB5.svg)](https://doi.org/10.64898/2026.04.28.721395)
 [![License](https://img.shields.io/badge/License-MIT-f773a8.svg)](https://opensource.org/licenses/MIT)
 
